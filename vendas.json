@@ -1,0 +1,292 @@
+import json
+
+# -------------------------------
+# CARREGAR PRODUTOS
+# -------------------------------
+
+def carregar_produtos():
+    try:
+        with open("produtos.json", "r") as arquivo:
+            return json.load(arquivo)
+    except:
+        return {
+            "maçã": {"preco": 2, "estoque": 5},
+            "banana": {"preco": 3, "estoque": 5},
+            "pão": {"preco": 4, "estoque": 5},
+            "leite": {"preco": 5, "estoque": 5},
+            "chocolate": {"preco": 6, "estoque": 5},
+            "biscoito": {"preco": 3, "estoque": 5}
+        }
+
+# -------------------------------
+# SALVAR PRODUTOS
+# -------------------------------
+
+def salvar_produtos():
+    with open("produtos.json", "w") as arquivo:
+        json.dump(produtos, arquivo)
+
+# -------------------------------
+# VARIÁVEIS
+# -------------------------------
+
+produtos = carregar_produtos()
+carrinho = {}
+historico_vendas = []
+
+# -------------------------------
+# VER PRODUTOS
+# -------------------------------
+
+def ver_produtos():
+
+    print("\nProdutos disponíveis:")
+
+    for nome, info in produtos.items():
+
+        aviso = ""
+        if info["estoque"] <= 2:
+            aviso = "⚠ ESTOQUE BAIXO"
+
+        print(f"{nome} - estoque: {info['estoque']} - preço: R$ {info['preco']} {aviso}")
+
+# -------------------------------
+# COMPRAR PRODUTO
+# -------------------------------
+
+def comprar_produto():
+
+    nome = input("Digite o produto que deseja comprar: ").lower()
+
+    if nome in produtos:
+
+        if produtos[nome]["estoque"] > 0:
+
+            carrinho[nome] = carrinho.get(nome, 0) + 1
+            produtos[nome]["estoque"] -= 1
+
+            salvar_produtos()
+
+            print("Produto adicionado ao carrinho!")
+
+        else:
+            print("Produto sem estoque!")
+
+    else:
+        print("Produto não existe!")
+
+# -------------------------------
+# VER CARRINHO
+# -------------------------------
+
+def ver_carrinho():
+
+    print("\nCarrinho:")
+
+    total = 0
+
+    for nome, quantidade in carrinho.items():
+
+        preco = produtos[nome]["preco"]
+        subtotal = preco * quantidade
+        total += subtotal
+
+        print(f"{nome} - {quantidade} unidades - R$ {subtotal}")
+
+    print(f"\nTotal da compra: R$ {total}")
+
+# -------------------------------
+# REMOVER PRODUTO
+# -------------------------------
+
+def remover_produto():
+
+    nome = input("Produto para remover: ").lower()
+
+    if nome in carrinho:
+
+        carrinho[nome] -= 1
+        produtos[nome]["estoque"] += 1
+
+        salvar_produtos()
+
+        if carrinho[nome] == 0:
+            del carrinho[nome]
+
+        print("Produto removido!")
+
+    else:
+        print("Produto não está no carrinho!")
+
+# -------------------------------
+# FINALIZAR COMPRA
+# -------------------------------
+
+def finalizar_compra():
+
+    if not carrinho:
+        print("Carrinho vazio!")
+        return
+
+    total = 0
+
+    print("\n===== RECIBO =====")
+
+    for nome, quantidade in carrinho.items():
+
+        preco = produtos[nome]["preco"]
+        subtotal = preco * quantidade
+        total += subtotal
+
+        print(f"{nome} - {quantidade} unidades - R$ {subtotal}")
+
+        venda = {
+            "produto": nome,
+            "quantidade": quantidade,
+            "total": subtotal
+        }
+
+        historico_vendas.append(venda)
+
+    print(f"\nTotal: {total}")
+
+    pagamento = float(input("Valor pago: R$ "))
+
+    if pagamento < total:
+        print("Pagamento insuficiente!")
+        return
+
+    troco = pagamento - total
+
+    print(f"Troco: R$ {troco}")
+
+    carrinho.clear()
+
+    print("Compra finalizada!")
+
+# -------------------------------
+# ADICIONAR PRODUTO
+# -------------------------------
+
+def adicionar_produto():
+
+    nome = input("Nome do produto: ").lower()
+    preco = float(input("Preço do produto: R$ "))
+    estoque = int(input("Quantidade em estoque: "))
+
+    produtos[nome] = {
+        "preco": preco,
+        "estoque": estoque
+    }
+
+    salvar_produtos()
+
+    print("Produto adicionado com sucesso!")
+
+# -------------------------------
+# HISTÓRICO
+# -------------------------------
+
+def ver_historico():
+
+    if not historico_vendas:
+        print("Nenhuma venda registrada.")
+        return
+
+    print("\n===== HISTÓRICO DE VENDAS =====")
+
+    for venda in historico_vendas:
+        print(f"{venda['produto']} - {venda['quantidade']} unidades - R$ {venda['total']}")
+
+# -------------------------------
+# TOTAL VENDIDO
+# -------------------------------
+
+def total_vendido():
+
+    total = 0
+
+    for venda in historico_vendas:
+        total += venda["total"]
+
+    print(f"\nTotal vendido: R$ {total}")
+
+# -------------------------------
+# PRODUTO MAIS VENDIDO
+# -------------------------------
+
+def produto_mais_vendido():
+
+    contador = {}
+
+    for venda in historico_vendas:
+
+        nome = venda["produto"]
+
+        if nome not in contador:
+            contador[nome] = 0
+
+        contador[nome] += venda["quantidade"]
+
+    if not contador:
+        print("Nenhuma venda registrada.")
+        return
+
+    mais_vendido = max(contador, key=contador.get)
+
+    print(f"\nProduto mais vendido: {mais_vendido} ({contador[mais_vendido]} unidades)")
+
+# -------------------------------
+# MENU
+# -------------------------------
+
+while True:
+
+    print("\n1 - Ver produtos")
+    print("2 - Comprar produto")
+    print("3 - Ver carrinho")
+    print("4 - Remover produto")
+    print("5 - Finalizar compra")
+    print("6 - Sair")
+    print("7 - Adicionar produto")
+    print("8 - Ver histórico de vendas")
+    print("9 - Total vendido")
+    print("10 - Produto mais vendido")
+
+    opcao = input("Escolha uma opção: ")
+
+    if opcao == "1":
+        ver_produtos()
+
+    elif opcao == "2":
+        comprar_produto()
+
+    elif opcao == "3":
+        ver_carrinho()
+
+    elif opcao == "4":
+        remover_produto()
+
+    elif opcao == "5":
+        finalizar_compra()
+
+    elif opcao == "6":
+
+        confirmar = input("Tem certeza que deseja sair? (s/n): ").lower()
+
+        if confirmar == "s":
+            print("Sistema encerrado")
+            break
+
+    elif opcao == "7":
+        adicionar_produto()
+
+    elif opcao == "8":
+        ver_historico()
+
+    elif opcao == "9":
+        total_vendido()
+
+    elif opcao == "10":
+    	produto_mais_vendid.o()
+    
